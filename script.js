@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const formData = new FormData(form);
       const response = await fetch(
-        "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec", 
+        "https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec", 
         {
           method: "POST",
           body: formData
