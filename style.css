@@ -14,14 +14,19 @@ body, html {
   color: #fff;
 }
 
+.logo {
+  width: 150px;
+  display: block;
+  margin: 0 auto 10px;
+}
+
 header {
   text-align: center;
-  padding: 10px 20px;
 }
 
 header h1 {
   font-size: 30px;
-  margin: 10px 0 5px;
+  margin-bottom: 5px;
 }
 
 .subinfo {
@@ -45,7 +50,6 @@ main {
 
 form h2 {
   color: #0057b7;
-  margin-bottom: 15px;
 }
 
 input, select, button {
@@ -80,5 +84,5 @@ footer {
   text-align: center;
   padding: 10px;
   font-size: 14px;
-  color: #ddd;
+  margin-top: 20px;
 }
