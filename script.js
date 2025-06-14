@@ -1,42 +1,40 @@
-document.getElementById('imageInput').addEventListener('change', function () {
-  const file = this.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const base64 = e.target.result.split(',')[1];
-      document.getElementById('imageBase64').value = base64;
-      document.getElementById('preview').src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+function doPost(e) {
+  try {
+    const sheet = SpreadsheetApp.openById("1y3LuRNV77H74uVAL-Z7H7rYC5yrAFu9r5xQslLIwKos").getSheetByName("Form Responses");
+    const folder = DriveApp.getFolderById("1JK6cLiYmE7AZ0ezc0C_8Ddwn18X4i3Md");
+
+    const data = JSON.parse(e.postData.contents);
+    const blob = Utilities.base64Decode(data.imageBase64);
+    const file = folder.createFile(blob, `found_item_${Date.now()}.png`, MimeType.PNG);
+    const imageUrl = file.getUrl();
+
+    sheet.appendRow([
+      new Date(),
+      data.usn,
+      data.branch,
+      data.item,
+      data.location,
+      data.date,
+      data.contact,
+      imageUrl
+    ]);
+
+    return ContentService.createTextOutput(JSON.stringify({ success: true }))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
   }
-});
+}
 
-document.getElementById('reportForm').addEventListener('submit', function (e) {
-  e.preventDefault();
-  const form = e.target;
-  const data = new FormData(form);
-  const formObject = {};
-  data.forEach((value, key) => formObject[key] = value);
-
-  fetch("https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(formObject)
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      alert("Submitted successfully!");
-      form.reset();
-      document.getElementById('preview').src = "";
-    } else {
-      throw new Error(data.error || "Submission failed");
-    }
-  })
-  .catch(error => {
-    console.error("Error submitting form:", error);
-    alert("Submission failed. Please check console for error.");
-  });
-});
+// Add CORS preflight support
+function doOptions(e) {
+  return ContentService.createTextOutput("")
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader("Access-Control-Allow-Origin", "*")
+    .setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    .setHeader("Access-Control-Allow-Headers", "Content-Type");
+}
