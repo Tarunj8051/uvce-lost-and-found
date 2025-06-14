@@ -1,55 +1,63 @@
-document.getElementById('reportForm').addEventListener('submit', async function(e) {
+document.getElementById('reportForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const form = e.target;
-  const submitBtn = form.querySelector('button[type="submit"]');
-  const statusDiv = document.getElementById('statusMessage') || createStatusDiv();
-
+  const button = form.querySelector('button');
+  
   try {
     // Show loading state
-    submitBtn.disabled = true;
-    statusDiv.textContent = "Submitting...";
-    statusDiv.className = "status processing";
-
-    // Prepare form data
-    const formData = new FormData(form);
+    button.disabled = true;
+    button.textContent = "Submitting...";
+    
+    // Get form data
+    const formData = {
+      usn: form.usn.value,
+      branch: form.branch.value,
+      item: form.item.value,
+      location: form.location.value,
+      date: form.date.value,
+      contact: form.contact.value,
+      imageBase64: form.imageBase64.value
+    };
     
     // Send to Google Apps Script
     const response = await fetch(
-      "https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec",
+      "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
       {
         method: "POST",
-        body: formData
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
       }
     );
-
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
+    
     const result = await response.json();
     
     if (!result.success) {
-      throw new Error(result.error || "Unknown server error");
+      throw new Error(result.error || "Submission failed");
     }
-
-    // Success handling
-    statusDiv.textContent = "Submitted successfully!";
-    statusDiv.className = "status success";
+    
+    // Success!
+    alert("Submitted successfully!");
     form.reset();
     document.getElementById('preview').src = "";
-
-  } catch (error) {
-    console.error("Submission error:", error);
-    statusDiv.textContent = `Error: ${error.message}`;
-    statusDiv.className = "status error";
     
+  } catch (error) {
+    console.error("Error:", error);
+    alert(`Error: ${error.message}`);
   } finally {
-    submitBtn.disabled = false;
-    setTimeout(() => statusDiv.textContent = '', 5000);
+    button.disabled = false;
+    button.textContent = "Submit Found Item";
   }
 });
 
-function createStatusDiv() {
-  const div = document.createElement('div');
-  div.id = 'statusMessage';
-  document.querySelector('main').appendChild(div);
-  return div;
-}
+// Image upload handler remains the same
+document.getElementById('imageInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    document.getElementById('preview').src = e.target.result;
+    document.getElementById('imageBase64').value = e.target.result.split(',')[1];
+  };
+  reader.readAsDataURL(file);
+});
