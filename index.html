@@ -8,7 +8,7 @@
 <body>
   <div class="background-overlay">
     <header>
-      <img src="https://th.bing.com/th/id/OIP.HdrZ4TYqPS30CJqAfCAjEQAAAA?pid=ImgDetMain" alt="UVCE Logo" style="height:60px" />
+      <img src="https://th.bing.com/th/id/OIP.HdrZ4TYqPS30CJqAfCAjEQAAAA?w=474&h=119&pid=ImgDetMain" alt="UVCE Logo" class="logo" />
       <h1>University of Visvesvaraya College of Engineering</h1>
       <p>Lost & Found Submission Portal</p>
       <p class="subinfo">
@@ -21,6 +21,7 @@
     <main>
       <form id="reportForm">
         <h2>Submit Found Item Details</h2>
+
         <input type="text" name="usn" placeholder="Your USN (e.g., 1UV21CS001)" required />
         <select name="branch" required>
           <option value="">Select Your Branch</option>
@@ -33,8 +34,9 @@
         <input type="text" name="location" placeholder="Where You Found It" required />
         <input type="date" name="date" required />
         <input type="file" id="imageInput" accept="image/*" required />
-        <input type="text" name="contact" placeholder="Your Contact Info (Email or Phone)" required />
         <input type="hidden" name="imageBase64" id="imageBase64" />
+        <input type="text" name="contact" placeholder="Your Contact Info (Email or Phone)" required />
+
         <button type="submit">Submit Found Item</button>
       </form>
 
