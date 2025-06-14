@@ -15,37 +15,36 @@ document.getElementById('reportForm').addEventListener('submit', function (e) {
   e.preventDefault();
 
   const form = e.target;
-  const data = {
-    usn: form.usn.value,
-    branch: form.branch.value,
-    item: form.item.value,
-    location: form.location.value,
-    date: form.date.value,
-    contact: form.contact.value,
-    imageBase64: form.imageBase64.value,
-    imageType: 'image/png'
-  };
+  const formData = new FormData(form);
+  
+  // Show loading state
+  const submitBtn = form.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Submitting...";
 
   fetch("https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: new URLSearchParams(data).toString()
+    body: formData
   })
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) throw new Error('Network response was not ok');
+      return response.json();
+    })
     .then(result => {
       if (result.success) {
         alert("Submitted successfully!");
         form.reset();
         document.getElementById('preview').src = "";
       } else {
-        alert("Error: " + result.error);
-        console.error("Script error:", result.error);
+        throw new Error(result.error || "Unknown error occurred");
       }
     })
     .catch(error => {
-      console.error("Fetch error:", error);
-      alert("Submission failed. Check console.");
+      console.error("Error:", error);
+      alert("Submission failed: " + error.message);
+    })
+    .finally(() => {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit Found Item";
     });
 });
