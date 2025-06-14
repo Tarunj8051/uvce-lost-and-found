@@ -1,104 +1,98 @@
-document.addEventListener('DOMContentLoaded', () => {
-  // Initialize Supabase
-  const supabaseUrl = 'https://iegpjpwlmyufhtbdjyzg.supabase.co';
-  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllZ3BqcHdsbXl1Zmh0YmRqeXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MzMyODEsImV4cCI6MjA2NTUwOTI4MX0.46gZziNKQa5QCtE31BlMRFnJ3-oEvzPZIoEkHgrP6fo';
-  const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('reportForm');
   const imageInput = document.getElementById('imageInput');
   const preview = document.getElementById('preview');
-  const statusDiv = document.getElementById('status');
-
+  
   // Image Preview Handler
   imageInput.addEventListener('change', () => {
     const file = imageInput.files[0];
     if (!file) return;
-
+    
     // Validate image
     if (!file.type.startsWith('image/')) {
-      showStatus('Please select an image file (JPEG/PNG)', 'error');
+      alert('Only image files are allowed (JPEG/PNG)');
       imageInput.value = '';
       return;
     }
-
-    if (file.size > 5 * 1024 * 1024) {
-      showStatus('Image too large (max 5MB)', 'error');
-      imageInput.value = '';
-      return;
-    }
-
+    
+    // Preview image
     const reader = new FileReader();
     reader.onload = (e) => {
       preview.src = e.target.result;
       preview.style.display = 'block';
+      document.getElementById('imageBase64').value = e.target.result.split(',')[1];
     };
     reader.readAsDataURL(file);
   });
 
-  // Form Submission Handler
+  // Form Submission
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const button = form.querySelector('button[type="submit"]');
-    
+    const statusDiv = document.getElementById('status') || createStatusDiv();
+
     try {
+      // Disable button during submission
       button.disabled = true;
-      showStatus('Submitting...', 'processing');
+      statusDiv.innerHTML = '<div class="status processing">Creating system and storing data...</div>';
 
-      // 1. Upload image if exists
-      let imageUrl = null;
-      const file = imageInput.files[0];
+      // Prepare payload
+      const payload = {
+        usn: form.usn.value || "Unknown",
+        branch: form.branch.value || "Unknown",
+        item: form.item.value || "Unspecified item",
+        location: form.location.value || "Unknown location",
+        date: form.date.value || new Date().toISOString().split('T')[0],
+        contact: form.contact.value || "No contact",
+        imageBase64: document.getElementById('imageBase64').value || null,
+        imageType: imageInput.files[0]?.type || "image/png"
+      };
+
+      // Send to Google Script
+      const response = await fetch('https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error(Server returned ${response.status});
       
-      if (file) {
-        try {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
-          
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('lost-found-images')
-            .upload(fileName, file);
-          
-          if (uploadError) throw uploadError;
-          
-          imageUrl = `${supabaseUrl}/storage/v1/object/public/lost-found-images/${fileName}`;
-        } catch (uploadError) {
-          console.error('Image upload failed:', uploadError);
-          showStatus('Image upload failed, submitting without image', 'error');
-        }
-      }
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || "Storage failed");
 
-      // 2. Save all data
-      const { error } = await supabase
-        .from('submissions')
-        .insert([{
-          usn: form.usn.value,
-          branch: form.branch.value,
-          item: form.item.value,
-          location: form.location.value,
-          date: form.date.value,
-          contact: form.contact.value,
-          image_url: imageUrl,
-          status: 'new'
-        }]);
+      // Success message with resource links
+      statusDiv.innerHTML = 
+        <div class="status success">
+          <p>✅ System initialized successfully!</p>
+          <p>Data stored in row ${result.resources.row}</p>
+          <p>
+            <a href="${result.resources.spreadsheet}" target="_blank">View Spreadsheet</a> | 
+            <a href="${result.resources.folder}" target="_blank">View Images</a>
+          </p>
+        </div>
+      ;
 
-      if (error) throw error;
-
-      // Success
-      showStatus('Submitted successfully!', 'success');
+      // Reset form
       form.reset();
       preview.style.display = 'none';
 
     } catch (error) {
-      console.error('Submission error:', error);
-      showStatus(`Error: ${error.message}`, 'error');
+      statusDiv.innerHTML = 
+        <div class="status error">
+          ❌ Error: ${error.message}
+        </div>
+      ;
+      console.error("Submission error:", error);
     } finally {
       button.disabled = false;
     }
   });
 
-  function showStatus(message, type) {
-    statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
-    if (type !== 'processing') {
-      setTimeout(() => statusDiv.innerHTML = '', 5000);
-    }
+  function createStatusDiv() {
+    const div = document.createElement('div');
+    div.id = 'status';
+    form.parentNode.insertBefore(div, form.nextSibling);
+    return div;
   }
 });
