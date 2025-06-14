@@ -18,7 +18,7 @@ document.getElementById('reportForm').addEventListener('submit', async (e) => {
     };
 
     // Updated fetch call with CORS handling
-    const response = await fetch('https://script.google.com/your-script-url', {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec', {
       method: 'POST',
       mode: 'no-cors', // Critical CORS fix
       headers: {
