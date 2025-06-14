@@ -21,7 +21,7 @@ document.getElementById('reportForm').addEventListener('submit', async (e) => {
     
     // Send to Google Apps Script
     const response = await fetch(
-      "https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec",
+      "https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
