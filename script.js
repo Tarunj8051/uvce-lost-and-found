@@ -13,29 +13,26 @@ document.getElementById('imageInput').addEventListener('change', function () {
 
 document.getElementById('reportForm').addEventListener('submit', function (e) {
   e.preventDefault();
-
-  const formData = new URLSearchParams();
-  formData.append("usn", document.getElementById("usn").value);
-  formData.append("branch", document.getElementById("branch").value);
-  formData.append("item", document.getElementById("item").value);
-  formData.append("location", document.getElementById("location").value);
-  formData.append("date", document.getElementById("date").value);
-  formData.append("contact", document.getElementById("contact").value);
-  formData.append("imageBase64", document.getElementById("imageBase64").value);
-  formData.append("imageType", "image/png");
+  const form = e.target;
+  const data = new FormData(form);
+  const formObject = {};
+  data.forEach((value, key) => formObject[key] = value);
 
   fetch("https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec", {
     method: "POST",
-    body: formData
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(formObject)
   })
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
+    .then(response => response.json())
+    .then(res => {
+      if (res.success) {
         alert("Submitted successfully!");
-        document.getElementById('reportForm').reset();
+        form.reset();
         document.getElementById('preview').src = "";
       } else {
-        alert("Submission failed: " + data.error);
+        alert("Submission failed: " + res.error);
       }
     })
     .catch(error => {
