@@ -1,25 +1,22 @@
 document.addEventListener('DOMContentLoaded', function() {
   // Image Preview Handler
-  document.getElementById('imageInput').addEventListener('change', function() {
+  const imageInput = document.getElementById('imageInput');
+  const preview = document.getElementById('preview');
+  
+  imageInput.addEventListener('change', function() {
     const file = this.files[0];
     if (!file) return;
-    
-    // Validate image
-    if (!file.type.startsWith('image/')) {
+
+    if (!file.type.match('image.*')) {
       alert('Please select an image file (JPEG, PNG)');
-      this.value = '';
-      return;
-    }
-    
-    if (file.size > 5 * 1024 * 1024) {
-      alert('Image too large (max 5MB)');
       this.value = '';
       return;
     }
 
     const reader = new FileReader();
     reader.onload = function(e) {
-      document.getElementById('preview').src = e.target.result;
+      preview.src = e.target.result;
+      preview.style.display = 'block';
       document.getElementById('imageBase64').value = e.target.result.split(',')[1];
     };
     reader.readAsDataURL(file);
@@ -30,11 +27,13 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     const form = e.target;
     const button = form.querySelector('button[type="submit"]');
-    
+    const statusDiv = document.getElementById('statusMessage') || createStatusDiv();
+
     try {
       // Show loading state
       button.disabled = true;
-      button.innerHTML = '<span class="spinner"></span> Submitting...';
+      statusDiv.textContent = "Submitting...";
+      statusDiv.className = "status processing";
 
       // Prepare form data
       const formData = {
@@ -51,36 +50,41 @@ document.addEventListener('DOMContentLoaded', function() {
       const response = await fetch('https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formData),
+        mode: 'cors'
       });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
       const result = await response.json();
-      if (!result.success) throw new Error(result.error || "Submission failed");
+      if (!result.success) {
+        throw new Error(result.error || "Submission failed");
+      }
 
       // Success
-      showAlert('success', 'Item submitted successfully!');
+      statusDiv.textContent = "Submitted successfully!";
+      statusDiv.className = "status success";
       form.reset();
-      document.getElementById('preview').src = '';
+      preview.src = "";
+      preview.style.display = "none";
 
     } catch (error) {
-      console.error('Submission error:', error);
-      showAlert('error', `Submission failed: ${error.message}`);
+      console.error('Error:', error);
+      statusDiv.textContent = `Error: ${error.message}`;
+      statusDiv.className = "status error";
     } finally {
       button.disabled = false;
-      button.textContent = 'Submit Found Item';
     }
   });
 
-  // Alert helper function
-  function showAlert(type, message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert ${type}`;
-    alertDiv.textContent = message;
-    document.body.prepend(alertDiv);
-    setTimeout(() => alertDiv.remove(), 5000);
+  function createStatusDiv() {
+    const div = document.createElement('div');
+    div.id = 'statusMessage';
+    form.appendChild(div);
+    return div;
   }
 });
