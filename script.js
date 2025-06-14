@@ -1,97 +1,64 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('reportForm');
-  const imageInput = document.getElementById('imageInput');
-  const preview = document.getElementById('preview');
+// Initialize Supabase
+const supabaseUrl = 'https://iegpjpwlmyufhtbdjyzg.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllZ3BqcHdsbXl1Zmh0YmRqeXpnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5MzMyODEsImV4cCI6MjA2NTUwOTI4MX0.46gZziNKQa5QCtE31BlMRFnJ3-oEvzPZIoEkHgrP6fo';
+const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+// Modified form submit handler
+document.getElementById('reportForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const button = form.querySelector('button[type="submit"]');
   
-  // Image Preview Handler
-  imageInput.addEventListener('change', () => {
-    const file = imageInput.files[0];
-    if (!file) return;
+  try {
+    button.disabled = true;
+    button.textContent = 'Submitting...';
+
+    // 1. Upload image if exists
+    let imageUrl = null;
+    const imageInput = document.getElementById('imageInput');
     
-    // Validate image
-    if (!file.type.startsWith('image/')) {
-      alert('Only image files are allowed (JPEG/PNG)');
-      imageInput.value = '';
-      return;
-    }
-    
-    // Preview image
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      preview.src = e.target.result;
-      preview.style.display = 'block';
-      document.getElementById('imageBase64').value = e.target.result.split(',')[1];
-    };
-    reader.readAsDataURL(file);
-  });
-
-  // Form Submission
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const button = form.querySelector('button[type="submit"]');
-    const statusDiv = document.getElementById('status') || createStatusDiv();
-
-    try {
-      // Disable button during submission
-      button.disabled = true;
-      statusDiv.innerHTML = '<div class="status processing">Creating system and storing data...</div>';
-
-      // Prepare payload
-      const payload = {
-        usn: form.usn.value || "Unknown",
-        branch: form.branch.value || "Unknown",
-        item: form.item.value || "Unspecified item",
-        location: form.location.value || "Unknown location",
-        date: form.date.value || new Date().toISOString().split('T')[0],
-        contact: form.contact.value || "No contact",
-        imageBase64: document.getElementById('imageBase64').value || null,
-        imageType: imageInput.files[0]?.type || "image/png"
-      };
-
-      // Send to Google Script
-      const response = await fetch('https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) throw new Error(`Server returned ${response.status}`);
+    if (imageInput.files[0]) {
+      const file = imageInput.files[0];
+      const fileName = `item_${Date.now()}_${file.name}`;
       
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error || "Storage failed");
-
-      // Success message with resource links
-      statusDiv.innerHTML = `
-        <div class="status success">
-          <p>✅ System initialized successfully!</p>
-          <p>Data stored in row ${result.resources.row}</p>
-          <p>
-            <a href="${result.resources.spreadsheet}" target="_blank">View Spreadsheet</a> | 
-            <a href="${result.resources.folder}" target="_blank">View Images</a>
-          </p>
-        </div>
-      `;
-
-      // Reset form
-      form.reset();
-      preview.style.display = 'none';
-
-    } catch (error) {
-      statusDiv.innerHTML = `
-        <div class="status error">
-          ❌ Error: ${error.message}
-        </div>
-      `;
-      console.error("Submission error:", error);
-    } finally {
-      button.disabled = false;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('lost-found-images')
+        .upload(fileName, file);
+      
+      if (uploadError) throw uploadError;
+      
+      imageUrl = `${supabaseUrl}/storage/v1/object/public/lost-found-images/${fileName}`;
     }
-  });
 
-  function createStatusDiv() {
-    const div = document.createElement('div');
-    div.id = 'status';
-    form.parentNode.insertBefore(div, form.nextSibling);
-    return div;
+    // 2. Save all data
+    const { data, error } = await supabase
+      .from('submissions')
+      .insert([{
+        usn: form.usn.value,
+        branch: form.branch.value,
+        item: form.item.value,
+        location: form.location.value,
+        date: form.date.value,
+        contact: form.contact.value,
+        image_url: imageUrl
+      }]);
+
+    if (error) throw error;
+
+    alert('Submitted successfully!');
+    form.reset();
+    document.getElementById('preview').src = '';
+
+  } catch (error) {
+    alert(`Error: ${error.message}`);
+    console.error(error);
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Submit Found Item';
   }
+});
+
+// Keep your existing image preview code
+document.getElementById('imageInput').addEventListener('change', function() {
+  // ... (your existing preview code)
 });
