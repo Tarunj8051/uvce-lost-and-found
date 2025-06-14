@@ -1,54 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UVCE Lost & Found Portal</title>
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css">
+  <!-- Add Supabase JS Library -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    // Initialize Supabase (use environment variables in production)
+    const supabaseUrl = 'https://iegpjpwlmyufhtbdjyzg.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // Your anon/public key
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+  </script>
 </head>
 <body>
   <div class="background-overlay">
     <header>
-      <img src="https://th.bing.com/th/id/OIP.HdrZ4TYqPS30CJqAfCAjEQAAAA?w=474&h=119&pid=ImgDetMain" alt="UVCE Logo" class="logo" />
+      <img src="uvce-logo.png" alt="UVCE Logo" class="logo">
       <h1>University of Visvesvaraya College of Engineering</h1>
       <p>Lost & Found Submission Portal</p>
-      <p class="subinfo">
-        <strong>Address:</strong> KR Circle, Bengaluru – 560001 |
-        <strong>Website:</strong> <a href="https://uvce.karnataka.gov.in/en" target="_blank">uvce.karnataka.gov.in</a> |
-        <strong>Contact:</strong> +91 080 22961803
-      </p>
     </header>
 
     <main>
       <form id="reportForm">
         <h2>Submit Found Item Details</h2>
 
-        <input type="text" name="usn" placeholder="Your USN (e.g., 1UV21CS001)" required />
+        <input type="text" name="usn" placeholder="Your USN (e.g., 1UV21CS001)" required>
         <select name="branch" required>
           <option value="">Select Your Branch</option>
           <option value="CS">Computer Science</option>
           <option value="EC">Electronics & Communication</option>
           <option value="EE">Electrical Engineering</option>
-          <option value="AIML">AI & ML</option>
         </select>
-        <input type="text" name="item" placeholder="Item Name (e.g., Wallet, ID Card)" required />
-        <input type="text" name="location" placeholder="Where You Found It" required />
-        <input type="date" name="date" required />
-        <input type="file" id="imageInput" accept="image/*" required />
-        <input type="hidden" name="imageBase64" id="imageBase64" />
-        <input type="text" name="contact" placeholder="Your Contact Info (Email or Phone)" required />
+        <input type="text" name="item" placeholder="Item Name" required>
+        <input type="text" name="location" placeholder="Where You Found It" required>
+        <input type="date" name="date" required>
+        <input type="file" id="imageInput" accept="image/*">
+        <input type="text" name="contact" placeholder="Your Contact Info" required>
 
         <button type="submit">Submit Found Item</button>
       </form>
 
       <section>
         <h2>Preview Uploaded Image</h2>
-        <img id="preview" src="" width="200" />
+        <img id="preview" src="" width="200">
+        <div id="status"></div>
       </section>
     </main>
-
-    <footer>
-      <p>© 2025 UVCE – All rights reserved</p>
-    </footer>
   </div>
 
   <script src="script.js"></script>
