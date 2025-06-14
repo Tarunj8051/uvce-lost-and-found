@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       // Send to Google Script
-      const response = await fetch('YOUR_DEPLOYMENT_URL', {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbwNjNnyFrbuE5H1SlwGwP77j8ebzKbUGIHjf-YI0csPBxNNh6H0JNUB7hHEaCWM4ccN/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
