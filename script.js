@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('reportForm'); // Define form here
+  
   // Image Preview Handler
   const imageInput = document.getElementById('imageInput');
   const preview = document.getElementById('preview');
@@ -23,11 +25,10 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Form Submission Handler
-  document.getElementById('reportForm').addEventListener('submit', async function(e) {
+  form.addEventListener('submit', async function(e) {
     e.preventDefault();
-    const form = e.target;
     const button = form.querySelector('button[type="submit"]');
-    const statusDiv = document.getElementById('statusMessage') || createStatusDiv();
+    const statusDiv = document.getElementById('statusMessage') || createStatusDiv(form); // Pass form as parameter
 
     try {
       // Show loading state
@@ -81,10 +82,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  function createStatusDiv() {
+  // Modified to accept form as parameter
+  function createStatusDiv(formElement) {
     const div = document.createElement('div');
     div.id = 'statusMessage';
-    form.appendChild(div);
+    formElement.appendChild(div);
     return div;
   }
 });
