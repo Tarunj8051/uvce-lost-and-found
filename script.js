@@ -25,18 +25,18 @@ document.getElementById('reportForm').addEventListener('submit', function (e) {
     },
     body: JSON.stringify(formObject)
   })
-    .then(response => response.json())
-    .then(res => {
-      if (res.success) {
-        alert("Submitted successfully!");
-        form.reset();
-        document.getElementById('preview').src = "";
-      } else {
-        alert("Submission failed: " + res.error);
-      }
-    })
-    .catch(error => {
-      console.error("Error submitting form:", error);
-      alert("Submission failed. Please try again.");
-    });
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert("Submitted successfully!");
+      form.reset();
+      document.getElementById('preview').src = "";
+    } else {
+      throw new Error(data.error || "Submission failed");
+    }
+  })
+  .catch(error => {
+    console.error("Error submitting form:", error);
+    alert("Submission failed. Please check console for error.");
+  });
 });
