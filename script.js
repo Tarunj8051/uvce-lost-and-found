@@ -40,12 +40,12 @@ document.getElementById('reportForm').addEventListener('submit', function (e) {
         form.reset();
         document.getElementById('preview').src = "";
       } else {
+        alert("Error: " + result.error);
         console.error("Script error:", result.error);
-        alert("Submission failed. Check console for error.");
       }
     })
     .catch(error => {
-      console.error("Error submitting form:", error);
-      alert("Submission failed. Please try again.");
+      console.error("Fetch error:", error);
+      alert("Submission failed. Check console.");
     });
 });
